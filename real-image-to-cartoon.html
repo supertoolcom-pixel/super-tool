@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Real Image to Cartoon</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      width: 360px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h2 { margin-bottom: 10px; }
+    input[type=file] { margin: 15px 0; }
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #1d4ed8; }
+    canvas {
+      margin-top: 15px;
+      max-width: 100%;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Real Image to Cartoon</h2>
+    <input type="file" accept="image/*" id="upload" />
+    <br />
+    <button onclick="cartoonize()">Convert to Cartoon</button>
+    <canvas id="canvas"></canvas>
+  </div>  <script>
+    const upload = document.getElementById('upload');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let img = new Image();
+
+    upload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+    };
+
+    function cartoonize() {
+      if (!img.src) return alert('Please upload an image');
+
+      ctx.drawImage(img, 0, 0);
+      let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let data = imageData.data;
+
+      // Simple cartoon effect: posterize + edge emphasis
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = Math.round(data[i] / 50) * 50;     // Red
+        data[i+1] = Math.round(data[i+1] / 50) * 50; // Green
+        data[i+2] = Math.round(data[i+2] / 50) * 50; // Blue
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+
+      // Edge overlay
+      ctx.globalCompositeOperation = 'overlay';
+      ctx.filter = 'contrast(
